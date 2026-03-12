@@ -1,3 +1,10 @@
 {
-  "cleanUrls": false
+  "routes": [
+    { "src": "^/$", "dest": "/index.html" },
+    { "src": "^/login$", "dest": "/auth.html" },
+    { "src": "^/dashboard$", "dest": "/dashboard.html" },
+    { "src": "^/index.html$", "dest": "/index.html" },
+    { "src": "^/auth.html$", "dest": "/auth.html" },
+    { "src": "^/dashboard.html$", "dest": "/dashboard.html" }
+  ]
 }
