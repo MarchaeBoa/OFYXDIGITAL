@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>OfyxDigital — Entrar ou Criar Conta</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200;12..96,300;12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ═══════════════════════════════════════
+   AUTH MODAL
+═══════════════════════════════════════ */
+.auth-overlay {
+  position: fixed; inset: 0; z-index: 9999;
+  background: rgba(0,0,0,.72);
+  backdrop-filter: blur(12px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+  opacity: 0; pointer-events: none;
+  transition: opacity .25s;
+}
+.auth-overlay.open { opacity: 1; pointer-events: all; }
+.auth-box {
+  background: #0D0D15;
+  border: 1px solid rgba(255,255,255,.09);
+  border-radius: 20px;
+  width: 100%; max-width: 440px;
+  padding: 40px;
+  box-shadow: 0 40px 100px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.04);
+  position: relative;
+  transform: translateY(20px);
+  transition: transform .3s cubic-bezier(.16,1,.3,1);
+}
+.auth-overlay.open .auth-box { transform: translateY(0); }
+.auth-close {
+  position: absolute; top: 16px; right: 16px;
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(255,255,255,.06); border: none; cursor: pointer;
+  color: #8888A0; font-size: .9rem; display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s;
+}
+.auth-close:hover { background: rgba(255,255,255,.1); color: #eee; }
+.auth-logo { display: flex; align-items: center; gap: 10px; margin-bottom: 28px; }
+.auth-logo-icon {
+  width: 34px; height: 34px; border-radius: 9px; background: #F5620F;
+  display: flex; align-items: center; justify-content: center;
+  font-size: .68rem; font-weight: 900; color: #fff;
+}
+.auth-logo-text { font-family: var(--font-display); font-size: 1rem; font-weight: 800; letter-spacing: -.4px; }
+.auth-logo-text span { color: #F5620F; }
+.auth-title { font-family: var(--font-display); font-size: 1.5rem; font-weight: 800; letter-spacing: -.8px; margin-bottom: 6px; }
+.auth-sub { font-size: .85rem; color: #8888A0; margin-bottom: 28px; }
+.auth-tabs { display: flex; background: rgba(255,255,255,.04); border-radius: 10px; padding: 3px; margin-bottom: 28px; gap: 3px; }
+.auth-tab {
+  flex: 1; padding: 8px; border: none; border-radius: 8px; cursor: pointer;
+  font-family: var(--font-body); font-size: .84rem; font-weight: 600;
+  color: #8888A0; background: transparent; transition: all .2s;
+}
+.auth-tab.active { background: #F5620F; color: #fff; }
+.auth-form { display: flex; flex-direction: column; gap: 14px; }
+.auth-field { display: flex; flex-direction: column; gap: 6px; }
+.auth-field label { font-size: .78rem; font-weight: 600; color: #AAAAC0; }
+.auth-field input {
+  background: rgba(255,255,255,.04); border: 1px solid rgba(255,255,255,.09);
+  border-radius: 9px; padding: 11px 14px;
+  font-family: var(--font-body); font-size: .88rem; color: #EEEEF2; outline: none;
+  transition: border-color .15s, background .15s;
+}
+.auth-field input:focus { border-color: rgba(245,98,15,.5); background: rgba(245,98,15,.04); }
+.auth-field input::placeholder { color: #4A4A62; }
+.auth-error { background: rgba(255,77,94,.1); border: 1px solid rgba(255,77,94,.25); border-radius: 8px; padding: 10px 14px; font-size: .82rem; color: #FF4D5E; display: none; }
+.auth-error.show { display: block; }
+.auth-submit {
+  margin-top: 4px; padding: 13px; border-radius: 10px;
+  background: #F5620F; color: #fff; border: none; cursor: pointer;
+  font-family: var(--font-body); font-size: .92rem; font-weight: 700;
+  transition: background .15s, transform .1s;
+}
+.auth-submit:hover { background: #FF7A33; transform: translateY(-1px); }
+.auth-submit:active { transform: none; }
+.auth-submit:disabled { opacity: .5; cursor: default; transform: none; }
+.auth-divider { text-align: center; font-size: .75rem; color: #4A4A62; margin: 4px 0; position: relative; }
+.auth-divider::before, .auth-divider::after { content: ''; position: absolute; top: 50%; width: 40%; height: 1px; background: rgba(255,255,255,.07); }
+.auth-divider::before { left: 0; } .auth-divider::after { right: 0; }
+.auth-switch { text-align: center; font-size: .82rem; color: #8888A0; margin-top: 4px; }
+.auth-switch a { color: #F5620F; cursor: pointer; font-weight: 600; }
+.auth-switch a:hover { color: #FF7A33; }
+.auth-loading { display: none; align-items: center; justify-content: center; gap: 10px; padding: 10px; }
+.auth-spinner { width: 20px; height: 20px; border: 2px solid rgba(245,98,15,.2); border-top-color: #F5620F; border-radius: 50%; animation: spin .6s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.auth-success { text-align: center; display: none; }
+.auth-success-icon { width: 56px; height: 56px; border-radius: 50%; background: rgba(15,204,116,.12); border: 2px solid rgba(15,204,116,.3); display: flex; align-items: center; justify-content: center; margin: 0 auto 16px; }
+
+/* ── Page wrapper ── */
+/* ── Page wrapper for standalone auth ── */
+:root {
+  --brand: #F5620F; --brand-light: #FF7A33; --brand-dark: #C74D0A;
+  --brand-dim: rgba(245,98,15,.10); --brand-border: rgba(245,98,15,.25);
+  --surface-0: #040407; --surface-1: #08080D; --surface-2: #0C0C14;
+  --surface-3: #111119; --surface-4: #17171F; --surface-5: #1E1E28;
+  --border-0: rgba(255,255,255,.045); --border-1: rgba(255,255,255,.08);
+  --border-2: rgba(255,255,255,.13); --border-3: rgba(255,255,255,.20);
+  --text-primary: #EEEEF2; --text-secondary: #8888A0; --text-tertiary: #4A4A62;
+  --green: #0FCC74; --red: #FF4D5E;
+  --font-display: 'Bricolage Grotesque', sans-serif;
+  --font-body: 'DM Sans', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; }
+body {
+  font-family: var(--font-body);
+  background: var(--surface-0);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  display: flex; align-items: center; justify-content: center;
+  min-height: 100vh;
+  padding: 20px;
+  position: relative; overflow: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% -10%, rgba(245,98,15,.12) 0%, transparent 60%),
+    radial-gradient(ellipse 50% 40% at 80% 80%, rgba(155,111,255,.05) 0%, transparent 60%);
+}
+.auth-standalone-wrap {
+  width: 100%; max-width: 440px; position: relative; z-index: 1;
+}
+.auth-standalone-wrap .auth-box {
+  position: static; transform: none;
+  box-shadow: 0 40px 100px rgba(0,0,0,.8), 0 0 0 1px rgba(255,255,255,.06);
+  border-radius: 20px;
+}
+.auth-back {
+  display: inline-flex; align-items: center; gap: 8px;
+  color: var(--text-secondary); font-size: .84rem; text-decoration: none;
+  margin-bottom: 20px; transition: color .15s;
+}
+.auth-back:hover { color: var(--text-primary); }
+.auth-back svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+</style>
+</head>
+<body>
+
+<div class="auth-standalone-wrap">
+  <a href="/index.html" class="auth-back">
+    <svg viewBox="0 0 14 14"><path d="M9 1L3 7l6 6"/></svg>
+    Voltar para o início
+  </a>
+
+  <div class="auth-box">
+    <div class="auth-logo">
+      <div class="auth-logo-icon">OD</div>
+      <div class="auth-logo-text">Ofyx<span>Digital</span></div>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Entrar</button>
+      <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Criar conta</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div id="form-login">
+      <div class="auth-title">Bem-vindo de volta</div>
+      <div class="auth-sub">Entre na sua conta para continuar</div>
+      <div class="auth-form">
+        <div class="auth-error" id="login-error"></div>
+        <div class="auth-field">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="seu@email.com" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label for="login-senha">Senha</label>
+          <input type="password" id="login-senha" placeholder="••••••••" autocomplete="current-password">
+        </div>
+        <button class="auth-submit" id="btn-login-submit" onclick="doLoginPage()">Entrar na plataforma</button>
+        <div class="auth-loading" id="login-loading">
+          <div class="auth-spinner"></div>
+          <span style="font-size:.84rem;color:#8888A0">Verificando...</span>
+        </div>
+      </div>
+      <div class="auth-switch" style="margin-top:18px">
+        Não tem conta? <a onclick="switchAuthTab('register')">Criar agora — é grátis</a>
+      </div>
+    </div>
+
+    <!-- REGISTER -->
+    <div id="form-register" style="display:none">
+      <div class="auth-title">Crie sua conta</div>
+      <div class="auth-sub">14 dias grátis · Sem cartão · Cancele quando quiser</div>
+      <div class="auth-form">
+        <div class="auth-error" id="register-error"></div>
+        <div class="auth-field">
+          <label for="reg-nome">Nome completo</label>
+          <input type="text" id="reg-nome" placeholder="Maria Oliveira" autocomplete="name">
+        </div>
+        <div class="auth-field">
+          <label for="reg-empresa">Empresa</label>
+          <input type="text" id="reg-empresa" placeholder="Empresa S.A.">
+        </div>
+        <div class="auth-field">
+          <label for="reg-email">Email corporativo</label>
+          <input type="email" id="reg-email" placeholder="maria@empresa.com.br" autocomplete="email">
+        </div>
+        <div class="auth-field">
+          <label for="reg-senha">Crie uma senha</label>
+          <input type="password" id="reg-senha" placeholder="Mín. 8 caracteres" autocomplete="new-password">
+        </div>
+        <button class="auth-submit" id="btn-register-submit" onclick="doRegisterPage()">Criar conta gratuita</button>
+        <div class="auth-loading" id="register-loading">
+          <div class="auth-spinner"></div>
+          <span style="font-size:.84rem;color:#8888A0">Criando conta...</span>
+        </div>
+      </div>
+      <div class="auth-switch" style="margin-top:18px">
+        Já tem conta? <a onclick="switchAuthTab('login')">Entrar</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const SESSION_KEY = 'ofyx_session';
+const USERS_KEY   = 'ofyx_users';
+function _getSession() { try { return JSON.parse(localStorage.getItem(SESSION_KEY)||'null'); } catch { return null; } }
+function _setSession(u) { localStorage.setItem(SESSION_KEY, JSON.stringify(u)); }
+function _getUsers()    { try { return JSON.parse(localStorage.getItem(USERS_KEY)||'[]'); } catch { return []; } }
+function _setUsers(u)   { localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+
+// If already logged in, redirect to dashboard
+if (_getSession()) window.location.replace('/dashboard.html');
+
+function clearAuthErrors() {
+  ['login-error','register-error'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('show'); el.textContent = ''; }
+  });
+}
+function showAuthError(id, msg) {
+  const el = document.getElementById(id);
+  if (el) { el.textContent = msg; el.classList.add('show'); }
+}
+function switchAuthTab(tab) {
+  document.getElementById('tab-login').classList.toggle('active', tab === 'login');
+  document.getElementById('tab-register').classList.toggle('active', tab !== 'login');
+  document.getElementById('form-login').style.display    = tab === 'login' ? 'block' : 'none';
+  document.getElementById('form-register').style.display = tab !== 'login' ? 'block' : 'none';
+  clearAuthErrors();
+}
+function setAuthLoading(prefix, on) {
+  const btn     = document.getElementById('btn-' + prefix + '-submit');
+  const loading = document.getElementById(prefix + '-loading');
+  if (btn)     btn.style.display = on ? 'none' : 'block';
+  if (loading) loading.style.display = on ? 'flex' : 'none';
+}
+function doLoginPage() {
+  const email = (document.getElementById('login-email').value||'').trim();
+  const senha =  document.getElementById('login-senha').value||'';
+  clearAuthErrors();
+  if (!email) { showAuthError('login-error','Informe seu email.'); return; }
+  if (!senha) { showAuthError('login-error','Informe sua senha.'); return; }
+  setAuthLoading('login', true);
+  setTimeout(() => {
+    const user = _getUsers().find(u => u.email.toLowerCase()===email.toLowerCase() && u.senha===senha);
+    if (!user) { setAuthLoading('login',false); showAuthError('login-error','Email ou senha incorretos.'); return; }
+    _setSession(user);
+    window.location.replace('/dashboard.html');
+  }, 700);
+}
+function doRegisterPage() {
+  const nome    = (document.getElementById('reg-nome').value||'').trim();
+  const empresa = (document.getElementById('reg-empresa').value||'').trim();
+  const email   = (document.getElementById('reg-email').value||'').trim();
+  const senha   =  document.getElementById('reg-senha').value||'';
+  clearAuthErrors();
+  if (!nome)  { showAuthError('register-error','Informe seu nome completo.'); return; }
+  if (!email) { showAuthError('register-error','Informe seu email.'); return; }
+  if (!/^[^@]+@[^@]+\.[^@]+$/.test(email)) { showAuthError('register-error','Email inválido.'); return; }
+  if (senha.length < 8) { showAuthError('register-error','Senha deve ter no mínimo 8 caracteres.'); return; }
+  setAuthLoading('register', true);
+  setTimeout(() => {
+    const users = _getUsers();
+    if (users.find(u => u.email.toLowerCase()===email.toLowerCase())) {
+      setAuthLoading('register',false); showAuthError('register-error','Email já cadastrado. Faça login.'); return;
+    }
+    const initials = nome.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
+    const newUser  = {id:Date.now(),nome,empresa:empresa||'Minha Empresa',email,senha,initials,role:'Administrador',createdAt:new Date().toISOString()};
+    users.push(newUser); _setUsers(users); _setSession(newUser);
+    window.location.replace('/dashboard.html');
+  }, 900);
+}
+document.addEventListener('keydown', e => {
+  if (e.key !== 'Enter') return;
+  const loginVisible = document.getElementById('form-login').style.display !== 'none';
+  if (loginVisible) doLoginPage(); else doRegisterPage();
+});
+// Read ?tab= from URL
+const urlTab = new URLSearchParams(window.location.search).get('tab');
+if (urlTab === 'register') switchAuthTab('register');
+</script>
+
+</body>
+</html>
